@@ -1,30 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import {connect} from 'react-redux';
 import Cardlist from '../components/Card_list';
 import Searchbox from '../components/Searchbox';
 import Scroll from '../components/Scroll';
 import ErrorBoundary from '../components/ErrorBoundary';
 import './App.css';
-import userEvent from '@testing-library/user-event';
+//import userEvent from '@testing-library/user-event';
+import {requestRobots, setSearchfield} from '../action';
 
-function App (){
-    const [robots, setRobots] = useState([])
-    const [searchfield, setSearchfield] = useState('')
+const mapStateToProps = state => {
+    return {
+        searchfield: state.searchRobots.searchField,
+        robots: state.requestRobots.robots,
+        isPending: state.requestRobots.isPending,
+        error: state.requestRobots.error
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onSearchChange: (event) => dispatch(setSearchfield(event.target.value)),
+        onRequestRobots: () => dispatch(requestRobots())
+    }
+}
+
+function App (props){
+    const {searchfield, onSearchChange, onRequestRobots, robots, isPending} = props;
 
     useEffect(() =>{
-        fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => response.json())
-        .then(users => setRobots(users));
+        onRequestRobots();
     },[]) // used to replace componentDidMount()
-
-    const onSearchChange = (event) => {
-        setSearchfield(event.target.value)
-    }
 
     const filterRobots = robots.filter(robot => {
         return robot.name.toLowerCase().includes(searchfield.toLowerCase());
     })
 
-    return !robots.length ? 
+    return isPending ? 
     <h1>Loading</h1> : 
     (
         <div className='tc'>
@@ -39,4 +50,4 @@ function App (){
     );
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);
